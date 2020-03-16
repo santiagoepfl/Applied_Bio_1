@@ -10,11 +10,9 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ````{r data,echo=FALSE}
-library("readr")
-
 #we get the data and format it nicely
-link="http://usres.stat.ufl.edu/~winner/data/apple1.dat"
-data <- read.delim(link, sep="",header=TRUE)
+path<-"apple1"
+data <- read.csv(path, sep=",",header=TRUE)
 colnames(data)<-c("variety","strain","days","weight","radius","radial","rate")
 data<-transform(data,variety=as.factor(variety),strain=as.factor(strain))
 
@@ -23,5 +21,10 @@ head(data)
 Data is nicely stored in our environement.
 
 ````{r exploratory analysis}
+boxplot(rate~strain,data = data)
+
+````
+
+````{r exploratory}
 
 ````
