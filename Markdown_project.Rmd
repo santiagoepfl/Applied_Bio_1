@@ -1,0 +1,27 @@
+---
+title: "Project Applied Biostatistics"
+author: "Santiago Anton Moreno"
+date: "16/03/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+````{r data,echo=FALSE}
+library("readr")
+
+#we get the data and format it nicely
+link="http://usres.stat.ufl.edu/~winner/data/apple1.dat"
+data <- read.delim(link, sep="",header=TRUE)
+colnames(data)<-c("variety","strain","days","weight","radius","radial","rate")
+data<-transform(data,variety=as.factor(variety),strain=as.factor(strain))
+
+head(data)
+````
+Data is nicely stored in our environement.
+
+````{r exploratory analysis}
+
+````
