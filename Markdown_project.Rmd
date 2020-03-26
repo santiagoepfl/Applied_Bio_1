@@ -2,17 +2,21 @@
 title: "Project Applied Biostatistics"
 author: "Santiago Anton Moreno"
 date: "16/03/2020"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2) 
 ```
 
 ````{r data,echo=FALSE}
 #we get the data and format it nicely
 path<-"apple1"
-data <- read.csv(path, sep=",",header=TRUE)
+data <- read.csv(path, sep=",",header = TRUE)
+data$X<-NULL #Because it seems there is an useless index column X
 colnames(data)<-c("variety","strain","days","weight","radius","radial","rate")
 data<-transform(data,variety=as.factor(variety),strain=as.factor(strain))
 
@@ -21,8 +25,8 @@ head(data)
 Data is nicely stored in our environement.
 
 ````{r exploratory analysis}
-boxplot(rate~strain,data = data)
-
+#boxplot(rate~strain,data = data)
+ggpairs(data)#Ca fait des bons plots ca mères, on analyze en 1 coups mais ca bug avec knitr pour rendre en html ou pdf...
 ````
 
 ````{r exploratory}
