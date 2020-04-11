@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ````{r data,echo=FALSE}
 #we get the data and format it nicely
 path<-"apple1"
-data <- read.csv(path, sep=",",header=TRUE)
+data <- read.csv(path, sep=",",header=TRUE)[,2:8]
 colnames(data)<-c("variety","strain","days","weight","radius","radial","rate")
 data<-transform(data,variety=as.factor(variety),strain=as.factor(strain))
 
@@ -21,10 +21,13 @@ head(data)
 Data is nicely stored in our environement.
 
 ````{r exploratory analysis}
+par(mfrow=c(1,2))
 boxplot(rate~strain,data = data)
+boxplot(rate~variety,data = data)
 
 ````
-
+As we can see in those two plots the homoskedacity property is clearly violated thus we should be carefull when doing analysis. The strain factor seems to be more informative than the apple variety. Normality is also violated as we see that the boxplot for some strains or variety are clearly non symetric which suggest non-normality of the rate. Indepence should be preserved since the study was done cleanly.
 ````{r exploratory}
-
+hist(data[data$variety==2,]$rate,breaks=5)
 ````
+
