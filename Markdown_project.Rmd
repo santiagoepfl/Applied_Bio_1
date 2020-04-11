@@ -2,11 +2,14 @@
 title: "Project Applied Biostatistics"
 author: "Santiago Anton Moreno"
 date: "16/03/2020"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
 ```
 
 ````{r data,echo=FALSE}
@@ -24,10 +27,10 @@ Data is nicely stored in our environement.
 par(mfrow=c(1,2))
 boxplot(rate~strain,data = data)
 boxplot(rate~variety,data = data)
+ggpairs(data)
 
 ````
 As we can see in those two plots the homoskedacity property is clearly violated thus we should be carefull when doing analysis. The strain factor seems to be more informative than the apple variety. Normality is also violated as we see that the boxplot for some strains or variety are clearly non symetric which suggest non-normality of the rate. Indepence should be preserved since the study was done cleanly.
 ````{r exploratory}
 hist(data[data$variety==2,]$rate,breaks=5)
 ````
-
