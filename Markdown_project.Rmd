@@ -10,6 +10,10 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(ggplot2)
+library(tidyverse)
+library(caret)
+library(leaps)
+library(MASS)
 ```
 
 ````{r data,echo=FALSE}
@@ -24,6 +28,7 @@ head(data)
 Data is nicely stored in our environement.
 
 ````{r exploratory analysis}
+library(GGally)
 par(mfrow=c(1,2))
 boxplot(rate~strain,data = data)
 boxplot(rate~variety,data = data)
@@ -32,5 +37,20 @@ ggpairs(data)
 ````
 As we can see in those two plots the homoskedacity property is clearly violated thus we should be carefull when doing analysis. The strain factor seems to be more informative than the apple variety. Normality is also violated as we see that the boxplot for some strains or variety are clearly non symetric which suggest non-normality of the rate. Indepence should be preserved since the study was done cleanly.
 ````{r exploratory}
-hist(data[data$variety==2,]$rate,breaks=5)
+plot.design(data)
+interaction.plot(data$variety,data$strain,data$rate)
+````
+````{r model fitting}
+model.1=aov(rate~strain+variety+radius+weight+days,data=data[c(-15,-16),])
+summary(model.1)
+```
+````{r model diagnostic}
+layout(matrix(1:4,ncol=2))
+plot(model.1)
+
+```
+````{r diagnostic}
+model.full=aov(rate~strain+variety+radius+weight+days,data=data[c(-16,-15),])
+step.model=stepAIC(model.full,direction="both",trace=FALSE)
+summary(step.model)
 ````
