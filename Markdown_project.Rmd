@@ -3,8 +3,8 @@ title: "Project Applied Biostatistics"
 author: "Santiago Anton Moreno"
 date: "16/03/2020"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -67,5 +67,8 @@ plot(model.1)
 ````
 ```{r depth}
 #see the changes between factors
-TukeyHSD(model.1)
+tuk<-TukeyHSD(model.1)
+````
+```{r diag}
+plot(tuk)
 ````
