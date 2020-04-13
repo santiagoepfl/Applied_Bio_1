@@ -41,7 +41,7 @@ plot.design(data)
 interaction.plot(data$variety,data$strain,data$rate)
 ````
 ````{r model fitting}
-model.1=aov(rate~strain+variety+radius+weight+days,data=data[c(-15,-16),])
+model.1=aov(rate~strain+variety,data=data[c(-15,-16),])
 summary(model.1)
 ```
 ````{r model diagnostic}
@@ -53,4 +53,19 @@ plot(model.1)
 model.full=aov(rate~strain+variety+radius+weight+days,data=data[c(-16,-15),])
 step.model=stepAIC(model.full,direction="both",trace=FALSE)
 summary(step.model)
+
+````
+
+````{r diag}
+print(AIC(step.model))
+print(AIC(model.1))
+````
+Well the aic betweenn the step model and the first naive model is not that different we can continue with our basic model.
+```{r diag}
+layout(matrix(1:4,ncol=2))
+plot(model.1)
+````
+```{r depth}
+#see the changes between factors
+TukeyHSD(model.1)
 ````
