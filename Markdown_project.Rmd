@@ -65,7 +65,7 @@ boxplot(rate~variety,data = data)
 ````
 As we can see in those two plots the homoskedacity property is clearly violated thus we should be carefull when doing analysis. The strain factor seems to be more informative than the apple variety. Normality is also violated as we see that the boxplot for some strains or variety are clearly non symetric which suggest non-normality of the rate. Indepence should be preserved since the study was done cleanly.
 
-#Bon, la variety 3 et 5 c'est chelou. Meme race, meme C qui est les celsius je pense, mais variety 5 a plus de days, pourtant variety 3 au beaucoup plus de rate. On peut meme pas expliquer par le fait que l'expension est plus rapide au début car enfaite c'est variety 3 qui a plus de radial à la fin. peut-être il y une erreur et il faut swap? peut-être l'expérience est claqué au sol avec pas les mêmes conditions ? Je pense que c'est  surement que les pommes n'ont pas la même maturité. faudra le mentionner bien et tout
+#Bon, la variety 3 et 5 c'est chelou. Meme race, meme C qui est les celsius je pense, mais variety 5 a plus de days, pourtant variety 3 au beaucoup plus de rate. On peut meme pas expliquer par le fait que l'expension est plus rapide au début car enfaite c'est variety 3 qui a plus de radial à la fin. peut-être il y une erreur et il faut swap? peut-être l'expérience est claqué au sol avec pas les mêmes conditions ? Je pense que c'est  surement que les pommes n'ont pas la même maturité. faudra le mentionner bien et tout. Cela "justifie" le fait d'utiliser variety 1,2,3,4,5 au lieu de juste séparer les différentes races de pommes, vu que selon leur maturité(information inconnu) tout change et en plus pour justifier pq on bosse pas avec temperature on peut dire aussi que c'est partout la meme sauf 1.
 
 As the rate of fungal expension and the fungal radial advance are redundant information, we have to choose which one will we discard and which one will we use as the response. We decided to use the rate, we will justify it later in the notebook.
 ````{r exploratory}
@@ -92,7 +92,6 @@ summary(step.model)
 By looking at the p-values, we can conclude that strain and variety variables must be included in our model. The backward elimination suggest that weight,radius and number of days are not significant. 
 
 The fact that the number of days is insignificant also suggest than the rate is constant in time, which justify using the rate of fungal invasion as our response instead of the fungal radial advance. 
-#jsp comment dire ça
 ````{r model fitting}
 model.1=lm(rate~strain+variety,data=data)
 summary(model.1)
@@ -100,8 +99,8 @@ summary(model.1)
 The results from the estimates are in agreement with the interpretation plot. For example, the estimates for the variables of strain 2 and 3 have negative values, which makes sense because in the interpretaion plot strain 2 and strain 3 induce the lowest rates of fungal invasion.
 #faudrait trouver un moyen de faire des références a une figure
 
-We can also look at the standart errors and p-values and conclude that some of those variable estimates may be equal to 0. However setting them to 0 would not change much in terms of fitting the data or change the interpretation of the model.
-#vérifie si je bullshit pas la.
+We can also look at the standart errors and p-values and conclude that some of those variable estimates may be equal to 0. However setting them to 0 would not change much in terms of fitting the data or change the interpretation of the model except maybe that some strains have the same effect on the rate.
+#vérifie si je bullshit pas la. C'est un peu inutile mais balek.
 ````{r model diagnostic}
 layout(matrix(1:4,ncol=2))
 plot(model.1)
@@ -126,7 +125,7 @@ Another problem is that our model does not include any notion of "special intera
 
 #There is also the fact that maybe the expension of the radius of the fungal invasion might not be linear. If we let the fusarium invade the apple long enough, it's expension will necessarily stop at one point because the apple radius is finite. We could also expect the expension to slowdown after it reaches a certain proportion of the apple. The expension of the radius not being linear would mean that the rate of fungal invasion that our model try to predict is kind of useless. Cela est "justifié" car days est insignifiant.
 
-The final problem is that our model don't gives us much insight on the fungal expension. Our model try to predict the rate of fungal expension for a given race without taking care of the temperature or maturity of the apple. But it doesn't tell us how this rate changes depending on the temperature.
+The final problem is that our model don't gives us much insight on the fungal expension. Our model try to predict the rate of fungal expension for a given race without taking care of the temperature or maturity of the apple. But it doesn't tell us how this rate changes depending on the temperature or maturity of the apple.
 #bon le troisième est peut-etre un peu forcé et faut trouver des meilleurs mots
 #pour la conclusion on demande plus de data, de la meilleur data (genre inclure température et maturité des pommes) et peut-etre on peut tenter des modèles plus complexes pas forcément linéaires.
 
