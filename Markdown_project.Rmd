@@ -15,7 +15,7 @@ library(caret)
 library(leaps)
 library(MASS)
 ```
-
+Our goal is to find a model that describe the rate of fungal invasion of 5 varieties of apples for 7 fusarium strains.
 ````{r data,echo=FALSE}
 #we get the data and format it nicely
 path<-"apple1"
@@ -23,51 +23,122 @@ data <- read.csv(path, sep=",",header=TRUE)[,2:8]
 colnames(data)<-c("variety","strain","days","weight","radius","radial","rate")
 data<-transform(data,variety=as.factor(variety),strain=as.factor(strain))
 
-head(data)
+data
 ````
-Data is nicely stored in our environement.
+
+Description: Rate of fungal invasion of 5 varieties of apples for 7 fusarium
+strains.
+
+Varieties:
+1=Bramley's Seedling, 1925-26 @12C. 70 Days
+2=Bramley's Seedling, 1924-25 @12C. 103 Days
+3=Cox's Orange Pippin, 1924-25 @12C. 54 Days
+4=Cox's Orange Pippin, 1924-25 @3C. 138 Days
+5=Cox's Orange Pippin, 1925-26 @12C. 89 Days
+
+
+Fusarium Strains:
+1=A
+2=B11
+3=B111
+4=C1
+5=C21
+6=C3
+7=D
+
+Variables/Columns
+Variety    8
+Fusarium Strain   16
+Days    22-24
+Apple Weight (grams)   27-32
+Radius (cm)   36-40
+Fungal Radial Advance (cm)  44-48
+Rate of advance (cm/day)   51-56
 
 ````{r exploratory analysis}
-library(GGally)
+#library(GGally)
 par(mfrow=c(1,2))
 boxplot(rate~strain,data = data)
 boxplot(rate~variety,data = data)
-ggpairs(data)
+#ggpairs(data)
 
 ````
 As we can see in those two plots the homoskedacity property is clearly violated thus we should be carefull when doing analysis. The strain factor seems to be more informative than the apple variety. Normality is also violated as we see that the boxplot for some strains or variety are clearly non symetric which suggest non-normality of the rate. Indepence should be preserved since the study was done cleanly.
+
+#Bon, la variety 3 et 5 c'est chelou. Meme race, meme C qui est les celsius je pense, mais variety 5 a plus de days, pourtant variety 3 au beaucoup plus de rate. On peut meme pas expliquer par le fait que l'expension est plus rapide au début car enfaite c'est variety 3 qui a plus de radial à la fin. peut-être il y une erreur et il faut swap? peut-être l'expérience est claqué au sol avec pas les mêmes conditions ? Je pense que c'est  surement que les pommes n'ont pas la même maturité. faudra le mentionner bien et tout
+
+As the rate of fungal expension and the fungal radial advance are redundant information, we have to choose which one will we discard and which one will we use as the response. We decided to use the rate, we will justify it later in the notebook.
 ````{r exploratory}
-plot.design(data)
-interaction.plot(data$variety,data$strain,data$rate)
+#plot.design(data) ce plot la est un peu moche peut-être faut trouver un autre moyen
+interaction.plot(data$variety,data$strain,data$rate, col=c('blue','red','violet','green','orange','grey','black'), lty=1
+                 ,xlab='variety', ylab='rate of fungal invasion(cm/day)', trace.label= 'strain')#j'aurais pu mettre col=1:7 mais faut eviter le jaune 
 ````
+There are several things we may notice from this plot. The general rate of fungal invasion varies a lot depending on the variety of the apple. Also different strains induce have different rates of fungal invasion. We see that all the lines have more or less the same shape but with different scaling, which suggest that a model that include just strain and variety should be decent.
+
+
+We can see on this plot that there is no data point for variety 1 and strain 1. This was suspicious, so we checked with the dataset online and the first row of the dataset is indeed missing. So we manually reinsert the missing value.
+```{r exploratory}
+#A run une seule fois
+data<-rbind(data, data.frame(variety=1,strain=1,days=70,weight=156.2,radius=3.66,
+                             radial=2.04,rate=0.0291))
+#rajouté cette valeur ca a changé un peu les fits mais pas trop j'ai l'impression
+```
+Now we can try to fit our model now. We start by doing an analysis of variance.
 ````{r model fitting}
-model.1=aov(rate~strain+variety,data=data[c(-15,-16),])
+model.full=aov(rate~strain+variety+radius+weight+days,data=data)
+step.model=stepAIC(model.full,direction="backward",trace=FALSE)
+summary(step.model)
+````
+By looking at the p-values, we can conclude that strain and variety variables must be included in our model. The backward elimination suggest that weight,radius and number of days are not significant. 
+
+The fact that the number of days is insignificant also suggest than the rate is constant in time, which justify using the rate of fungal invasion as our response instead of the fungal radial advance. 
+#jsp comment dire ça
+````{r model fitting}
+model.1=lm(rate~strain+variety,data=data)
 summary(model.1)
 ```
+The results from the estimates are in agreement with the interpretation plot. For example, the estimates for the variables of strain 2 and 3 have negative values, which makes sense because in the interpretaion plot strain 2 and strain 3 induce the lowest rates of fungal invasion.
+#faudrait trouver un moyen de faire des références a une figure
+
+We can also look at the standart errors and p-values and conclude that some of those variable estimates may be equal to 0. However setting them to 0 would not change much in terms of fitting the data or change the interpretation of the model.
+#vérifie si je bullshit pas la.
 ````{r model diagnostic}
 layout(matrix(1:4,ncol=2))
 plot(model.1)
-
 ```
-````{r diagnostic}
-model.full=aov(rate~strain+variety+radius+weight+days,data=data[c(-16,-15),])
-step.model=stepAIC(model.full,direction="both",trace=FALSE)
-summary(step.model)
-
-````
-
-````{r diag}
-print(AIC(step.model))
-print(AIC(model.1))
-````
-Well the aic betweenn the step model and the first naive model is not that different we can continue with our basic model.
-```{r diag}
+The row 16 is clearly an outlier. We decided to remove it along with the row 15 (also an outlier ) because they also have too much influence in our variable estimates.
+#dire qu'ils sont trop influents ca justifie de les enlever un peut, jsp pas pouquoi mais le cook distance plot est remplacé par un truc chelou donc pas sure que se soit vrai, mais les valeur en strain 3 and strain 2 et variety 3 change pas mal en enlevant ces points
+````{r model fitting}
+model.2=lm(rate~strain+variety,data=data[c(-15,-16),])
+#summary(model.2)
+```
+```{r model fitting}
 layout(matrix(1:4,ncol=2))
-plot(model.1)
-````
+plot(model.2)
+```
+Now the different diagnostic plots suggest that the model fit the data much better now, so we decide to use it as our final model.
+```{r final model}
+model.2
+```
+There are numerous shortcomings to our model. The first one is the clear lack of data, having only one data point per variety and strain is cleary to low, which means any outlier greatly influence our model. 
+
+Another problem is that our model does not include any notion of "special interaction" between some stains and variety. For example, it is possible some varieties of apple have more immunity against some kind of fusarium strains than others. This might explain why we have outliers with our model.
+
+#There is also the fact that maybe the expension of the radius of the fungal invasion might not be linear. If we let the fusarium invade the apple long enough, it's expension will necessarily stop at one point because the apple radius is finite. We could also expect the expension to slowdown after it reaches a certain proportion of the apple. The expension of the radius not being linear would mean that the rate of fungal invasion that our model try to predict is kind of useless. Cela est "justifié" car days est insignifiant.
+
+The final problem is that our model don't gives us much insight on the fungal expension. Our model try to predict the rate of fungal expension for a given race without taking care of the temperature or maturity of the apple. But it doesn't tell us how this rate changes depending on the temperature.
+#bon le troisième est peut-etre un peu forcé et faut trouver des meilleurs mots
+#pour la conclusion on demande plus de data, de la meilleur data (genre inclure température et maturité des pommes) et peut-etre on peut tenter des modèles plus complexes pas forcément linéaires.
+
+
+
+
+
+
+
 ```{r depth}
 #see the changes between factors
-tuk<-TukeyHSD(model.1)
+tuk<-TukeyHSD(aov(model.2))
 ````
 ```{r diag}
 plot(tuk)
