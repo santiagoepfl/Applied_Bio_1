@@ -3,8 +3,8 @@ title: "Project Applied Biostatistics"
 author: "Santiago Anton Moreno"
 date: "16/03/2020"
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -59,7 +59,7 @@ Rate of advance (cm/day)   51-56
 #library(GGally)
 par(mfrow=c(1,2))
 boxplot(rate~strain,data = data)
-boxplot(rate~variety,data = data)
+boxplot(radial~variety,data = data)
 #ggpairs(data)
 
 ````
@@ -77,7 +77,7 @@ There are several things we may notice from this plot. The general rate of funga
 
 
 We can see on this plot that there is no data point for variety 1 and strain 1. This was suspicious, so we checked with the dataset online and the first row of the dataset is indeed missing. So we manually reinsert the missing value.
-```{r exploratory}
+```{r exploratory2}
 #A run une seule fois
 data<-rbind(data, data.frame(variety=1,strain=1,days=70,weight=156.2,radius=3.66,
                              radial=2.04,rate=0.0291))
@@ -92,7 +92,7 @@ summary(step.model)
 By looking at the p-values, we can conclude that strain and variety variables must be included in our model. The backward elimination suggest that weight,radius and number of days are not significant. 
 
 The fact that the number of days is insignificant also suggest than the rate is constant in time, which justify using the rate of fungal invasion as our response instead of the fungal radial advance. 
-````{r model fitting}
+````{r model fitting2}
 model.1=lm(rate~strain+variety,data=data)
 summary(model.1)
 ```
@@ -107,11 +107,11 @@ plot(model.1)
 ```
 The row 16 is clearly an outlier. We decided to remove it along with the row 15 (also an outlier ) because they also have too much influence in our variable estimates.
 #dire qu'ils sont trop influents ca justifie de les enlever un peut, jsp pas pouquoi mais le cook distance plot est remplacé par un truc chelou donc pas sure que se soit vrai, mais les valeur en strain 3 and strain 2 et variety 3 change pas mal en enlevant ces points
-````{r model fitting}
+````{r model fitting3}
 model.2=lm(rate~strain+variety,data=data[c(-15,-16),])
 #summary(model.2)
 ```
-```{r model fitting}
+```{r model fitting4}
 layout(matrix(1:4,ncol=2))
 plot(model.2)
 ```
