@@ -1,0 +1,152 @@
+---
+title: "Project Applied Biostatistics"
+author: "Santiago Anton Moreno"
+date: "16/03/2020"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(tidyverse)
+library(caret)
+library(leaps)
+library(MASS)
+```
+Our goal is to find a model that describe the rate of fungal invasion of 5 varieties of apples for 7 fusarium strains.
+````{r data,echo=FALSE}
+#we get the data and format it nicely
+path<-"apple1"
+data <- read.csv(path, sep=",",header=TRUE)[,2:8]
+colnames(data)<-c("variety","strain","days","weight","radius","radial","rate")
+data<-transform(data,variety=as.factor(variety),strain=as.factor(strain))
+
+data
+````
+
+Description: Rate of fungal invasion of 5 varieties of apples for 7 fusarium
+strains.
+
+Varieties:
+1=Bramley's Seedling, 1925-26 @12C. 70 Days
+2=Bramley's Seedling, 1924-25 @12C. 103 Days
+3=Cox's Orange Pippin, 1924-25 @12C. 54 Days
+4=Cox's Orange Pippin, 1924-25 @3C. 138 Days
+5=Cox's Orange Pippin, 1925-26 @12C. 89 Days
+
+
+Fusarium Strains:
+1=A
+2=B11
+3=B111
+4=C1
+5=C21
+6=C3
+7=D
+
+Variables/Columns
+Variety    8
+Fusarium Strain   16
+Days    22-24
+Apple Weight (grams)   27-32
+Radius (cm)   36-40
+Fungal Radial Advance (cm)  44-48
+Rate of advance (cm/day)   51-56
+
+As the rate of fungal expension and the fungal radial advance are redundant information, we have to choose which one will we discard and which one will we use as the response. We decided to use the rate, we will justify it later in the notebook.
+
+Now we can look at some plots to check if there are some trends we should pay attention to.
+
+```{r}
+par(mfrow=c(1,2))
+plot(rate~weight,data=data)
+plot(rate~days,data=data)
+```
+It is hard to tell exactly but it appears there is no correlation between the rate and the weight. Also there is higher variation when the weight is low. We also did this plot for the number of days and reached the same conclusion, which is to be expected as the weight and radius in our dataset have a correlation of 0.97.
+
+It seems that higher number of days induce lower rates of fungal invasion. However we must keep in mind that apples with the same varieties have the same number of days in our dataset, so we must be careful with our conclusions.
+
+````{r exploratory analysis}
+par(mfrow=c(1,2))
+boxplot(rate~strain,data = data)
+boxplot(rate~variety,data = data)
+````
+As we can see in those two plots the homoskedacity property is clearly violated thus we should be careful when doing analysis. The strain factor seems to be more informative than the apple variety. Normality is also violated as we see that the boxplot for some strains or variety are clearly non symetric which suggest non-normality of the rate. Indepence should be preserved since the study was done cleanly.
+
+#aussi vas-y doucement pour dire quoi est normality/pas symétrique. On a pas beaucoup de data frère donc on sait pratiquement rien.
+
+By taking a deeper look at the description, we noticed that variety 3 and variety 5 are apples with the same race and variety 5 has higher number of days. However not only variety has rates much lower than variety 3, but variety 5 also has a lower fungal radial distance. It does not makes sense unless we assume that the conditions of the experience were not the same. For exemple, the maturity of the apples could be different at the start of the experience for those two varieties of apples. This justifies working with "varieties" of apples instead of race of apples and number of days. 
+#Bon, la variety 3 et 5 c'est chelou. Meme race, meme C qui est les celsius je pense, mais variety 5 a plus de days, pourtant variety 3 au beaucoup plus de rate. On peut meme pas expliquer par le fait que l'expension est plus rapide au début car enfaite c'est variety 3 qui a plus de radial à la fin. peut-être il y une erreur et il faut swap? peut-être l'expérience est claqué au sol avec pas les mêmes conditions ? Je pense que c'est  surement que les pommes n'ont pas la même maturité. faudra le mentionner bien et tout. Cela "justifie" le fait d'utiliser variety 1,2,3,4,5 au lieu de juste séparer les différentes races de pommes, vu que selon leur maturité(information inconnu) tout change et en plus pour justifier pq on bosse pas avec temperature on peut dire aussi que c'est partout la meme sauf 1.
+
+
+````{r exploratory}
+interaction.plot(data$variety,data$strain,data$rate, col=c('blue','red','violet','green','orange','grey','black'), lty=1
+                 ,xlab='variety', ylab='rate of fungal invasion(cm/day)', trace.label= 'strain')#j'aurais pu mettre col=1:7 mais faut eviter le jaune 
+````
+There are several things we may notice from this plot. The general rate of fungal invasion varies a lot depending on the variety of the apple. Also different strains induce have different rates of fungal invasion. We see that all the lines have more or less the same shape but with different scalings, which suggest that a model that include only strain and variety should be decent.
+
+
+We can see on this plot that there is no data point for variety 1 and strain 1. This was suspicious, so we checked with the dataset online and the first row of the dataset is indeed missing. So we manually reinsert the missing value.
+```{r exploratory}
+#A run une seule fois
+data<-rbind(data, data.frame(variety=1,strain=1,days=70,weight=156.2,radius=3.66,
+                             radial=2.04,rate=0.0291))
+#rajouté cette valeur ca a changé un peu les fits mais pas trop j'ai l'impression
+```
+Now we can try to fit our model now. We start by doing an analysis of variance.
+````{r model fitting}
+model.full=aov(rate~strain+variety+radius+weight+days,data=data)
+step.model=stepAIC(model.full,direction="backward",trace=FALSE)
+summary(step.model)
+````
+By looking at the p-values, we can conclude that strain and variety variables must be included in our model. The backward elimination suggest that weight,radius and number of days are not significant. 
+
+The fact that the number of days is insignificant also suggest than the rate is constant in time, which justify using the rate of fungal invasion as our response instead of the fungal radial advance.
+#Faudrait peut aussi préciser que si notre model pour rate est true et rate constant dans le temps, alors le true model pour fungal radial advance c'est rate*days, ce qui est pas un modèle linéaire et bla bla. Mais perso flemme.
+````{r model fitting}
+model.1=lm(rate~strain+variety,data=data)
+summary(model.1)
+```
+The results from the estimates are in agreement with the interpretation plot. For example, the estimates for the variables of strain 2 and 3 have negative values, which makes sense because in the interpretaion plot strain 2 and strain 3 induce the lowest rates of fungal invasion.
+#faudrait trouver un moyen de faire des références a une figure
+
+We can also look at the standart errors and p-values and conclude that some of those variable estimates may be equal to 0. However setting them to 0 would not change much in terms of fitting the data or change the interpretation of the model except maybe that some strains have the same effect on the rate.
+#vérifie si je bullshit pas la. C'est un peu inutile mais balek.
+````{r model diagnostic}
+layout(matrix(1:4,ncol=2))
+plot(model.1)
+```
+The row 16 is clearly an outlier. We decided to remove it along with the row 15 (also an outlier ) because they also have too much influence in our variable estimates.
+#dire qu'ils sont trop influents ca justifie de les enlever un peut, jsp pas pouquoi mais le cook distance plot est remplacé par un truc chelou donc pas sure que se soit vrai, mais les valeur en strain 3 and strain 2 et variety 3 change pas mal en enlevant ces points
+````{r model fitting}
+model.2=lm(rate~strain+variety,data=data[c(-15,-16),])
+#summary(model.2)
+```
+```{r model fitting}
+layout(matrix(1:4,ncol=2))
+plot(model.2)
+```
+Now the different diagnostic plots suggest that the model fit the data much better now, so we decide to use it as our final model.
+```{r final model}
+model.2
+```
+There are numerous shortcomings to our model. The first one is the clear lack of data, having only one data point per variety and strain is cleary too low, which means any outlier greatly influence our model. 
+
+Another problem is that our model does not include any notion of "special interaction" between some stains and variety. For example, it is possible some varieties of apple have more immunity against some kind of fusarium strains than others. This might explain why we have outliers with our model.
+
+Even though we concluded that the rate is constant in our dataset, it is still possible that we were wrong considering the low amount of data we have and that apples with the same varieties have the same number of days. In this case, using the rate as our response is not really relevant.
+
+The final problem is that our model does not give us much insight on the fungal expension. Our model try to predict the rate of fungal expension for a given race without taking care of the temperature or maturity of the apple. For exemple, we do not know if the race of the apple matters a lot or if  any variation we might see between those races is caused by some other factor like the maturity of the apples at the start of the experience.
+
+#pour la conclusion on demande plus de data, de la meilleur data (genre inclure température et maturité des pommes), faut aussi que les varité aies pas tous les même jours(ou alors qu'on puisse séparer les variétés par race et autres... parce que lâ ca va pas) et peut-etre on peut tenter des modèles plus complexes pas forcément linear regression de base dans le cas ou le rate pas constant.
+
+
+```{r depth}
+#see the changes between factors
+tuk<-TukeyHSD(aov(model.2))
+````
+```{r diag}
+plot(tuk)
+````
