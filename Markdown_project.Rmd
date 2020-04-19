@@ -55,25 +55,37 @@ Radius (cm)   36-40
 Fungal Radial Advance (cm)  44-48
 Rate of advance (cm/day)   51-56
 
+As the rate of fungal expension and the fungal radial advance are redundant information, we have to choose which one will we discard and which one will we use as the response. We decided to use the rate, we will justify it later in the notebook.
+
+Now we can look at some plots to check if there are some trends we should pay attention to.
+
+```{r}
+par(mfrow=c(1,2))
+plot(rate~weight,data=data)
+plot(rate~days,data=data)
+```
+It is hard to tell exactly but it appears there is no correlation between the rate and the weight. Also there is higher variation when the weight is low. We also did this plot for the number of days and reached the same conclusion, which is to be expected as the weight and radius in our dataset have a correlation of 0.97.
+
+It seems that higher number of days induce lower rates of fungal invasion. However we must keep in mind that apples with the same varieties have the same number of days in our dataset, so we must be careful with our conclusions.
+
 ````{r exploratory analysis}
-#library(GGally)
 par(mfrow=c(1,2))
 boxplot(rate~strain,data = data)
 boxplot(rate~variety,data = data)
-#ggpairs(data)
-
 ````
-As we can see in those two plots the homoskedacity property is clearly violated thus we should be carefull when doing analysis. The strain factor seems to be more informative than the apple variety. Normality is also violated as we see that the boxplot for some strains or variety are clearly non symetric which suggest non-normality of the rate. Indepence should be preserved since the study was done cleanly.
+As we can see in those two plots the homoskedacity property is clearly violated thus we should be careful when doing analysis. The strain factor seems to be more informative than the apple variety. Normality is also violated as we see that the boxplot for some strains or variety are clearly non symetric which suggest non-normality of the rate. Indepence should be preserved since the study was done cleanly.
 
+#aussi vas-y doucement pour dire quoi est normality/pas symétrique. On a pas beaucoup de data frère donc on sait pratiquement rien.
+
+By taking a deeper look at the description, we noticed that variety 3 and variety 5 are apples with the same race and variety 5 has higher number of days. However not only variety has rates much lower than variety 3, but variety 5 also has a lower fungal radial distance. It does not makes sense unless we assume that the conditions of the experience were not the same. For exemple, the maturity of the apples could be different at the start of the experience for those two varieties of apples. This justifies working with "varieties" of apples instead of race of apples and number of days. 
 #Bon, la variety 3 et 5 c'est chelou. Meme race, meme C qui est les celsius je pense, mais variety 5 a plus de days, pourtant variety 3 au beaucoup plus de rate. On peut meme pas expliquer par le fait que l'expension est plus rapide au début car enfaite c'est variety 3 qui a plus de radial à la fin. peut-être il y une erreur et il faut swap? peut-être l'expérience est claqué au sol avec pas les mêmes conditions ? Je pense que c'est  surement que les pommes n'ont pas la même maturité. faudra le mentionner bien et tout. Cela "justifie" le fait d'utiliser variety 1,2,3,4,5 au lieu de juste séparer les différentes races de pommes, vu que selon leur maturité(information inconnu) tout change et en plus pour justifier pq on bosse pas avec temperature on peut dire aussi que c'est partout la meme sauf 1.
 
-As the rate of fungal expension and the fungal radial advance are redundant information, we have to choose which one will we discard and which one will we use as the response. We decided to use the rate, we will justify it later in the notebook.
+
 ````{r exploratory}
-#plot.design(data) ce plot la est un peu moche peut-être faut trouver un autre moyen
 interaction.plot(data$variety,data$strain,data$rate, col=c('blue','red','violet','green','orange','grey','black'), lty=1
                  ,xlab='variety', ylab='rate of fungal invasion(cm/day)', trace.label= 'strain')#j'aurais pu mettre col=1:7 mais faut eviter le jaune 
 ````
-There are several things we may notice from this plot. The general rate of fungal invasion varies a lot depending on the variety of the apple. Also different strains induce have different rates of fungal invasion. We see that all the lines have more or less the same shape but with different scaling, which suggest that a model that include just strain and variety should be decent.
+There are several things we may notice from this plot. The general rate of fungal invasion varies a lot depending on the variety of the apple. Also different strains induce have different rates of fungal invasion. We see that all the lines have more or less the same shape but with different scalings, which suggest that a model that include only strain and variety should be decent.
 
 
 We can see on this plot that there is no data point for variety 1 and strain 1. This was suspicious, so we checked with the dataset online and the first row of the dataset is indeed missing. So we manually reinsert the missing value.
@@ -91,7 +103,8 @@ summary(step.model)
 ````
 By looking at the p-values, we can conclude that strain and variety variables must be included in our model. The backward elimination suggest that weight,radius and number of days are not significant. 
 
-The fact that the number of days is insignificant also suggest than the rate is constant in time, which justify using the rate of fungal invasion as our response instead of the fungal radial advance. 
+The fact that the number of days is insignificant also suggest than the rate is constant in time, which justify using the rate of fungal invasion as our response instead of the fungal radial advance.
+#Faudrait peut aussi préciser que si notre model pour rate est true et rate constant dans le temps, alors le true model pour fungal radial advance c'est rate*days, ce qui est pas un modèle linéaire et bla bla. Mais perso flemme.
 ````{r model fitting}
 model.1=lm(rate~strain+variety,data=data)
 summary(model.1)
@@ -119,20 +132,15 @@ Now the different diagnostic plots suggest that the model fit the data much bett
 ```{r final model}
 model.2
 ```
-There are numerous shortcomings to our model. The first one is the clear lack of data, having only one data point per variety and strain is cleary to low, which means any outlier greatly influence our model. 
+There are numerous shortcomings to our model. The first one is the clear lack of data, having only one data point per variety and strain is cleary too low, which means any outlier greatly influence our model. 
 
 Another problem is that our model does not include any notion of "special interaction" between some stains and variety. For example, it is possible some varieties of apple have more immunity against some kind of fusarium strains than others. This might explain why we have outliers with our model.
 
-#There is also the fact that maybe the expension of the radius of the fungal invasion might not be linear. If we let the fusarium invade the apple long enough, it's expension will necessarily stop at one point because the apple radius is finite. We could also expect the expension to slowdown after it reaches a certain proportion of the apple. The expension of the radius not being linear would mean that the rate of fungal invasion that our model try to predict is kind of useless. Cela est "justifié" car days est insignifiant.
+Even though we concluded that the rate is constant in our dataset, it is still possible that we were wrong considering the low amount of data we have and that apples with the same varieties have the same number of days. In this case, using the rate as our response is not really relevant.
 
-The final problem is that our model don't gives us much insight on the fungal expension. Our model try to predict the rate of fungal expension for a given race without taking care of the temperature or maturity of the apple. But it doesn't tell us how this rate changes depending on the temperature or maturity of the apple.
-#bon le troisième est peut-etre un peu forcé et faut trouver des meilleurs mots
-#pour la conclusion on demande plus de data, de la meilleur data (genre inclure température et maturité des pommes) et peut-etre on peut tenter des modèles plus complexes pas forcément linéaires.
+The final problem is that our model does not give us much insight on the fungal expension. Our model try to predict the rate of fungal expension for a given race without taking care of the temperature or maturity of the apple. For exemple, we do not know if the race of the apple matters a lot or if  any variation we might see between those races is caused by some other factor like the maturity of the apples at the start of the experience.
 
-
-
-
-
+#pour la conclusion on demande plus de data, de la meilleur data (genre inclure température et maturité des pommes), faut aussi que les varité aies pas tous les même jours(ou alors qu'on puisse séparer les variétés par race et autres... parce que lâ ca va pas) et peut-etre on peut tenter des modèles plus complexes pas forcément linear regression de base dans le cas ou le rate pas constant.
 
 
 ```{r depth}
