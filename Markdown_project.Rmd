@@ -25,6 +25,10 @@ data<-transform(data,variety=as.factor(variety),strain=as.factor(strain))
 
 data
 ````
+```{r}
+ggpairs(data)
+
+```
 
 Description: Rate of fungal invasion of 5 varieties of apples for 7 fusarium
 strains.
@@ -130,7 +134,8 @@ plot(model.2)
 ```
 Now the different diagnostic plots suggest that the model fit the data much better now, so we decide to use it as our final model.
 ```{r final model}
-model.2
+formula(model.2)
+coef(model.2)
 ```
 There are numerous shortcomings to our model. The first one is the clear lack of data, having only one data point per variety and strain is cleary too low, which means any outlier greatly influence our model. 
 
