@@ -68,14 +68,14 @@ boxplot(rate~strain,data = data)
 boxplot(rate~variety,data = data)
 ```
 
-As we can see in the plots above, the homoskedacity property is violated thus we should be careful when doing analysis. Normality also seems violated as we see that the boxplot for some strains or variety are clearly non symetric which suggest non-normality of the rate. Independence should be preserved since the study was done cleanly. 
+As we can see in the plots above, the homoskedacity property is violated thus we should be careful when doing analysis. Normality also seems violated as we see that the boxplot for some strains or variety are clearly non symetric which suggest non-normality of the rate. 
 
-By taking a deeper look at the description of the data in the introduction, we noticed that variety 3 and variety 5 are apples with the same "race" but variety 5 having higher number of days. However not only variety 5 has rates much lower than variety 3, but variety 5 also has a lower fungal radial distance. It does not makes sense unless we assume that the conditions of the experience were not exactly the same. For exemple, the maturity of the apples could be different at the start of the experience for those two varieties of apples. It justifies working with "varieties" of apples instead of "race" of apples and number of days.
+By taking a deeper look at the description of the data in the introduction, we noticed that variety 3 and variety 5 are the same kind but variety 5 having higher number of days. However not only variety 5 has rates much lower than variety 3, but it also has a lower fungal radial distance. It does not makes sense unless we assume that the conditions of the experience were not exactly the same. For example, the maturity of the apples could be different at the start of the experience for those two varieties of apples. It justifies working with "varieties" of apples instead of "race" of apples and number of days.
 ````{r exploratory1,echo=FALSE}
 interaction.plot(data$variety,data$strain,data$rate, col=c('blue','red','violet','green','orange','grey','black'), lty=1
                  ,xlab='variety', ylab='rate of fungal invasion(cm/day)', trace.label= 'strain')#j'aurais pu mettre col=1:7 mais faut eviter le jaune 
 ````
-There are several things we may notice from this plot. The general rate of fungal invasion varies a lot depending on the variety of the apple. Also different strains induce have different rates of fungal invasion. We see that all the lines have more or less the same shape but with different scalings except maybe for strain 3, which suggest that a model that include only strain and variety should be decent.
+There are several things we may notice from this plot. The general rate of fungal invasion varies a lot depending on the variety of the apple. Also different strains have different rates of fungal invasion. We see that all the lines have more or less the same shape but with different scalings except maybe for strain 3.
 
 
 We can see on this plot that there is no data point for variety 1 and strain 1. This was suspicious, so we checked with the dataset online and the first row of the dataset is indeed missing. So we manually reinsert the missing value
@@ -108,11 +108,11 @@ model.2=lm(rate~strain+variety,data=data[c(-15,-16),])
 layout(matrix(1:4,ncol=2))
 plot(model.2)
 ```
-Now the different diagnostic plots suggest that the model fit the data much better now, so  our final model forula is: rate ~ strain + variety with the following coefficients:
+Now the different diagnostic plots suggest that the model fit the data much better now, so  our final model formula is: rate ~ strain + variety with the following coefficients:
 ```{r model fitting 5, echo=FALSE}
 coef(model.2)
 ```
-We also checked the p-values for the different parameters estimate and it is not unreasonable to set them to 0, but it would not really change much in regard to the interpretation of the model or fitting to the data. It would only mean that some strains have the same effect on the rate of fungal invasion than others.
+We also checked the p-values for the different parameters estimate and it is not unreasonable to set them to 0, but it would not change much in regard to the interpretation of the model or fitting to the data. It would only mean that some strains have the same effect on the rate of fungal invasion than others.
 \section{Final model and conclusion}
 
 There are numerous shortcomings to our model. The first one is the clear lack of data, having only one data point per variety and strain is cleary too low, which means any outlier greatly influence our model. 
@@ -121,8 +121,8 @@ Another problem is that our model does not include any notion of "special intera
 
 Even though we concluded that the rate is constant in our dataset, it is still possible that we were wrong considering the low amount of data we have and that apples with the same varieties have the same number of days. In this case, using the rate as our response is not really relevant.
 
-The final problem is that our model does not give us much insight on the fungal expension. Our model try to predict the rate of fungal expension for a given "race" without taking care of the temperature or maturity of the apple. For exemple, we do not know if the race of the apple matters a lot or if  any variation we might see between those races is caused by some other factor like the maturity of the apples at the start of the experience.
+The final problem is that our model does not give us much insight on the fungal expension. Our model tries to predict the rate of fungal expension for a given variety without taking care of the temperature or maturity of the apple. For exemple, we do not know if the variety of the apple matters a lot or if  any variation we might see between those races is caused by some other factor like the maturity of the apples at the start of the experience.
 
-In conclusion, we need better quality and higher amount of data to have the ability to find a good and informative model that can predict the rate of fungal invasion for other apples.
+In conclusion, we need better quality and higher amount of data to be able to find a good and informative model that can predict the rate of fungal invasion for other apples or at least give usefull information about the resistance of a given variety against a given strain.
 
 
